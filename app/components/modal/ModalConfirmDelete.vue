@@ -63,7 +63,7 @@ async function onClick() {
       <div class="space-y-5">
         <div class="flex items-center gap-4 text-sm text-gray-700 dark:text-gray-200">
           <UIcon
-            :name="confirmColor === 'error' ? 'i-tabler-alert-triangle' : 'i-tabler-help-circle'"
+            :name="confirmColor === 'error' ? 'i-lucide-alert-triangle' : 'i-lucide-help-circle'"
             size="36"
             :class="confirmColor === 'error' ? 'text-red-500' : 'text-primary'"
             class="shrink-0"
@@ -76,7 +76,7 @@ async function onClick() {
     </template>
     <template #footer>
       <UButton
-        icon="i-tabler-x"
+        icon="i-lucide-x"
         :disabled="loading"
         class="text-base"
         variant="ghost"
@@ -86,7 +86,7 @@ async function onClick() {
         {{ cancelText }}
       </UButton>
       <UButton
-        icon="i-tabler-check"
+        icon="i-lucide-check"
         :loading="loading"
         :color="confirmColor"
         class="text-base"

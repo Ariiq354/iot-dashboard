@@ -80,7 +80,7 @@ const newColumns = computed<TableColumn<any>[]>(() => [
                 ? [
                     {
                       label: "Lihat Detail",
-                      icon: "i-tabler-eye",
+                      icon: "i-lucide-eye",
                       onSelect() {
                         emit("view", row.original);
                       },
@@ -91,7 +91,7 @@ const newColumns = computed<TableColumn<any>[]>(() => [
                 ? [
                     {
                       label: "Edit",
-                      icon: "i-tabler-edit",
+                      icon: "i-lucide-edit",
                       onSelect() {
                         emit("edit", row.original);
                       },
@@ -106,7 +106,7 @@ const newColumns = computed<TableColumn<any>[]>(() => [
                 ? [
                     {
                       label: "Hapus",
-                      icon: "i-tabler-trash",
+                      icon: "i-lucide-trash",
                       color: "error",
                       onSelect() {
                         emit("delete", [row.original.id]);
@@ -129,7 +129,7 @@ const newColumns = computed<TableColumn<any>[]>(() => [
                 },
                 () =>
                   h(UButton, {
-                    "icon": "i-tabler-dots",
+                    "icon": "i-lucide-ellipsis",
                     "color": "neutral",
                     "variant": "ghost",
                     "aria-label": "Actions dropdown",
@@ -167,7 +167,7 @@ watch(
           class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-4 py-2.5 rounded-full shadow-2xl border border-gray-200 dark:border-gray-800 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md"
         >
           <UButton
-            icon="i-tabler-x"
+            icon="i-lucide-x"
             color="neutral"
             variant="subtle"
             size="sm"
@@ -177,7 +177,7 @@ watch(
             {{ Object.keys(rowSelection).length }} Terpilih
           </UButton>
           <UButton
-            icon="i-tabler-trash"
+            icon="i-lucide-trash"
             color="error"
             size="sm"
             class="rounded-full font-medium"

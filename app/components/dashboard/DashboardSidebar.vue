@@ -34,7 +34,7 @@ const items = computed<DropdownMenuItem[][]>(() => [
   [
     {
       label: "Keluar",
-      icon: "i-lucide-logout",
+      icon: "i-lucide-log-out",
       color: "error",
       onClick: signOut,
     },
