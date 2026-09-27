@@ -29,11 +29,4 @@ export default defineNuxtConfig({
   components: {
     dirs: [],
   },
-
-  nitro: {
-    externals: {
-      inline: ["vue-chrts"],
-    },
-  },
-
 });
