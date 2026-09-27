@@ -217,7 +217,7 @@ watch(
 
     <div v-if="pagination" class="mt-2 flex items-center justify-center md:justify-between">
       <p class="text-muted hidden px-2 text-sm md:block">
-        Menampilkan {{ (page - 1) * 10 + 1 }} sampai
+        Menampilkan {{ total === 0 ? 0 : (page - 1) * 10 + 1 }} sampai
         {{ Math.min((page - 1) * 10 + 10, total) }} dari {{ total }} item
       </p>
       <div class="flex justify-center">
