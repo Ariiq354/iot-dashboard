@@ -31,6 +31,7 @@ async function ingestTelemetry(input: {
     }
 
     const receivedAt = new Date();
+
     const [reading] = await tx
       .insert(telemetry)
       .values({
@@ -61,6 +62,7 @@ async function ingestTelemetry(input: {
       .select()
       .from(deviceThreshold)
       .where(eq(deviceThreshold.deviceId, input.deviceId));
+
     for (const threshold of thresholds) {
       const value = input[threshold.metric];
       if (value === undefined)
@@ -72,6 +74,7 @@ async function ingestTelemetry(input: {
         threshold.maximum !== null && value > Number(threshold.maximum)
       );
       const type = metricAlert[threshold.metric];
+
       if (violating) {
         const [existing] = await tx
           .select({ id: alert.id })
@@ -144,6 +147,7 @@ export const IoTService = {
         .limit(1);
       return { ...item, latestTelemetry: latest ?? null, stale: item.status === "offline" };
     }));
+
     return { devices: latestTelemetry, activeAlertCount: activeAlertCount[0]?.value ?? 0 };
   },
 
@@ -160,6 +164,7 @@ export const IoTService = {
       query.to ? lte(telemetry.receivedAt, query.to) : undefined,
     ].filter(Boolean);
     const where = filters.length ? and(...filters) : undefined;
+
     const [items, [total]] = await Promise.all([
       db
         .select()
@@ -173,6 +178,7 @@ export const IoTService = {
         .from(telemetry)
         .where(where),
     ]);
+
     return { items, total: total?.value ?? 0, page: query.page, limit: query.limit };
   },
 
@@ -189,6 +195,7 @@ export const IoTService = {
       query.deviceId === undefined ? undefined : eq(alert.deviceId, query.deviceId),
     ].filter(Boolean);
     const where = filters.length ? and(...filters) : undefined;
+
     const [items, [total]] = await Promise.all([
       db
         .select()
@@ -202,6 +209,7 @@ export const IoTService = {
         .from(alert)
         .where(where),
     ]);
+
     return { items, total: total?.value ?? 0, page: query.page, limit: query.limit };
   },
 
@@ -213,12 +221,14 @@ export const IoTService = {
       .set({ status: "acknowledged", acknowledgedAt: new Date() })
       .where(and(eq(alert.id, id), eq(alert.status, "active")))
       .returning();
+
     if (updated)
       return updated;
     const [existing] = await db
       .select()
       .from(alert)
       .where(eq(alert.id, id));
+
     if (!existing)
       throw createError({ statusCode: 404, statusMessage: "Peringatan tidak ditemukan" });
     return existing;
@@ -229,6 +239,7 @@ export const IoTService = {
       .select()
       .from(device)
       .orderBy(device.id);
+
     const results = [];
     let anomalyAssigned = false;
 
@@ -251,6 +262,7 @@ export const IoTService = {
         results.push({ deviceId: item.id, outcome: "offline" });
         continue;
       }
+
       if (mode === "random" && item.status === "offline" && Math.random() >= 0.5) {
         results.push({ deviceId: item.id, outcome: "offline" });
         continue;
@@ -264,6 +276,7 @@ export const IoTService = {
           eq(deviceThreshold.metric, "temperature"),
         ))
         .limit(1);
+
       const temperature = mode === "anomaly" && !anomalyAssigned && threshold?.maximum
         ? Number(threshold.maximum) + 5
         : 20 + Math.random() * 8;
@@ -277,6 +290,7 @@ export const IoTService = {
         co2: Math.round(400 + Math.random() * 400),
         source: "simulator",
       });
+
       results.push({ deviceId: item.id, outcome: "telemetry", reading });
     }
 

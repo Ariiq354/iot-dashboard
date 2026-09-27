@@ -8,7 +8,10 @@ export const telemetryInputSchema = z.object({
   co2: z.number().finite().min(0).optional(),
   source: z.enum(["simulator", "device"]).default("device"),
 }).refine(
-  input => input.temperature !== undefined || input.humidity !== undefined || input.co2 !== undefined,
+  input =>
+    input.temperature !== undefined
+    || input.humidity !== undefined
+    || input.co2 !== undefined,
   "At least one sensor value is required",
 );
 
