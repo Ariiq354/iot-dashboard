@@ -12,12 +12,32 @@ export const metrics = {
   humidity: { label: "Kelembapan", unit: "%", color: "#3b82f6" },
   co2: { label: "CO₂", unit: "ppm", color: "#8b5cf6" },
 };
-export const overviewColumns: TableColumn<Awaited<ReturnType<typeof IoTService.getOverview>>["devices"][number]>[] = [
+export const overviewColumns: TableColumn<
+  Awaited<ReturnType<typeof IoTService.getOverview>>["devices"][number]
+>[] = [
   { accessorKey: "name", header: "Perangkat" },
   { accessorKey: "status", header: "Koneksi" },
-  { id: "temperature", header: "Suhu", cell: ({ row }) => formatSensor(row.original.latestTelemetry?.temperature, "°C") },
-  { id: "humidity", header: "Kelembapan", cell: ({ row }) => formatSensor(row.original.latestTelemetry?.humidity, "%") },
-  { id: "co2", header: "CO₂", cell: ({ row }) => formatSensor(row.original.latestTelemetry?.co2, "ppm") },
-  { accessorKey: "lastSeen", header: "Terakhir menerima data (WIB)", cell: ({ row }) => formatDate(row.original.lastSeen) },
+  {
+    id: "temperature",
+    header: "Suhu",
+    cell: ({ row }) =>
+      formatSensor(row.original.latestTelemetry?.temperature, "°C"),
+  },
+  {
+    id: "humidity",
+    header: "Kelembapan",
+    cell: ({ row }) =>
+      formatSensor(row.original.latestTelemetry?.humidity, "%"),
+  },
+  {
+    id: "co2",
+    header: "CO₂",
+    cell: ({ row }) => formatSensor(row.original.latestTelemetry?.co2, "ppm"),
+  },
+  {
+    accessorKey: "lastSeen",
+    header: "Terakhir menerima data (WIB)",
+    cell: ({ row }) => formatDate(row.original.lastSeen),
+  },
   { accessorKey: "stale", header: "Kesegaran data" },
 ];

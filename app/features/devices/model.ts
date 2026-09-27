@@ -8,10 +8,24 @@ export const deviceFilterSchema = z.object({
   status: z.enum(["all", "online", "offline"]).default("all"),
 });
 
-export const deviceColumns: TableColumn<Awaited<ReturnType<typeof IoTService.listDevices>>[number]>[] = [
+export const deviceColumns: TableColumn<
+  Awaited<ReturnType<typeof IoTService.listDevices>>[number]
+>[] = [
   { accessorKey: "name", header: "Perangkat" },
-  { accessorKey: "location", header: "Lokasi", cell: ({ row }) => row.original.location ?? "—" },
+  {
+    accessorKey: "location",
+    header: "Lokasi",
+    cell: ({ row }) => row.original.location ?? "—",
+  },
   { accessorKey: "status", header: "Koneksi" },
-  { accessorKey: "lastSeen", header: "Terakhir menerima data (WIB)", cell: ({ row }) => formatDate(row.original.lastSeen) },
-  { accessorKey: "createdAt", header: "Terdaftar (WIB)", cell: ({ row }) => formatDate(row.original.createdAt) },
+  {
+    accessorKey: "lastSeen",
+    header: "Terakhir menerima data (WIB)",
+    cell: ({ row }) => formatDate(row.original.lastSeen),
+  },
+  {
+    accessorKey: "createdAt",
+    header: "Terdaftar (WIB)",
+    cell: ({ row }) => formatDate(row.original.createdAt),
+  },
 ];

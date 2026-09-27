@@ -9,15 +9,43 @@ export const alertFilterSchema = z.object({
   type: z.string().default("all"),
 });
 
-export const statusLabels = { active: "Aktif", acknowledged: "Sudah diketahui", resolved: "Selesai" };
-export const severityLabels = { low: "Rendah", medium: "Sedang", high: "Tinggi", critical: "Kritis" };
-export const alertColumns: TableColumn<Awaited<ReturnType<typeof IoTService.listAlerts>>["items"][number]>[] = [
+export const statusLabels = {
+  active: "Aktif",
+  acknowledged: "Sudah diketahui",
+  resolved: "Selesai",
+};
+export const severityLabels = {
+  low: "Rendah",
+  medium: "Sedang",
+  high: "Tinggi",
+  critical: "Kritis",
+};
+export const alertColumns: TableColumn<
+  Awaited<ReturnType<typeof IoTService.listAlerts>>["items"][number]
+>[] = [
   { accessorKey: "deviceId", header: "Perangkat" },
-  { accessorKey: "type", header: "Peringatan", cell: ({ row }) => alertLabels[row.original.type] ?? row.original.type },
+  {
+    accessorKey: "type",
+    header: "Peringatan",
+    cell: ({ row }) => alertLabels[row.original.type] ?? row.original.type,
+  },
   { accessorKey: "severity", header: "Prioritas" },
   { accessorKey: "status", header: "Status" },
-  { accessorKey: "lastValue", header: "Nilai terakhir", cell: ({ row }) => row.original.lastValue ?? "—" },
-  { accessorKey: "openedAt", header: "Dibuka (WIB)", cell: ({ row }) => formatDate(row.original.openedAt) },
-  { accessorKey: "resolvedAt", header: "Selesai (WIB)", cell: ({ row }) => row.original.resolvedAt ? formatDate(row.original.resolvedAt) : "—" },
+  {
+    accessorKey: "lastValue",
+    header: "Nilai terakhir",
+    cell: ({ row }) => row.original.lastValue ?? "—",
+  },
+  {
+    accessorKey: "openedAt",
+    header: "Dibuka (WIB)",
+    cell: ({ row }) => formatDate(row.original.openedAt),
+  },
+  {
+    accessorKey: "resolvedAt",
+    header: "Selesai (WIB)",
+    cell: ({ row }) =>
+      row.original.resolvedAt ? formatDate(row.original.resolvedAt) : "—",
+  },
   { id: "acknowledge", header: "Tindakan" },
 ];
