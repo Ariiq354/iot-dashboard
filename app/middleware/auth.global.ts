@@ -13,10 +13,5 @@ export default defineNuxtRouteMiddleware(async (to) => {
     if (!session.value) {
       return navigateTo({ path: "/" });
     }
-
-    // const isAdminRoute = to.path.startsWith("/dashboard/admin");
-    // if (isAdminRoute && session.value.user.role !== "admin") {
-    //   return navigateTo({ path: "/dashboard" });
-    // }
   }
 });

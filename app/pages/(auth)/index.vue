@@ -5,7 +5,7 @@ definePageMeta({
   layout: "auth",
 });
 useHead({
-  title: "Masuk · Berkah Amanah",
+  title: "Masuk · IoT Dashboard",
 });
 </script>
 

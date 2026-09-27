@@ -46,11 +46,13 @@ const items = computed<DropdownMenuItem[][]>(() => [
   <UDashboardSidebar collapsible resizable class="bg-muted" :ui="{ footer: 'border-t border-default', root: 'min-w-0 transition-all duration-300 overflow-hidden' }">
     <template #header>
       <div class="flex h-14 w-full items-center gap-2 overflow-hidden px-3 py-2 text-left text-sm">
-        <NuxtImg src="logo.webp" alt="Berkah Amanah" class="size-8" />
+        <UIcon
+          name="i-lucide-radio-tower"
+          class="size-8"
+        />
 
         <div class="grid flex-1 text-left text-sm leading-tight">
-          <span class="truncate font-medium">Berkah Amanah</span>
-          <span class="truncate text-xs">Koperasi</span>
+          <span class="truncate font-medium">IoT Dashboard</span>
         </div>
       </div>
     </template>
