@@ -1,26 +1,17 @@
+import type { z } from "zod";
+import type { createDeviceSchema } from "./model";
 /* eslint antfu/consistent-chaining: off */
 import { and, count, desc, eq, gte, lte, sql } from "drizzle-orm";
+import { dataState, OFFLINE_MS } from "../../../shared/iot";
 import { db } from "../../database";
 import { alert, device, deviceThreshold, telemetry } from "../../database/schema/iot";
 
-const metricAlert = {
-  temperature: "TEMPERATURE_HIGH",
-  humidity: "HUMIDITY_HIGH",
-  co2: "CO2_HIGH",
-} as const;
-
-function severityFor(metric: keyof typeof metricAlert) {
-  return metric === "co2" ? "high" as const : "medium" as const;
-}
-
 async function ingestTelemetry(input: {
   deviceId: number;
-  temperature?: number;
-  humidity?: number;
-  co2?: number;
+  nilai: number;
   source: "simulator" | "device";
-}) {
-  return db.transaction(async (tx) => {
+}, transaction?: Parameters<Parameters<typeof db.transaction>[0]>[0]) {
+  const ingest = async (tx: Parameters<Parameters<typeof db.transaction>[0]>[0]) => {
     const [currentDevice] = await tx
       .select()
       .from(device)
@@ -36,9 +27,9 @@ async function ingestTelemetry(input: {
       .insert(telemetry)
       .values({
         deviceId: input.deviceId,
-        temperature: input.temperature === undefined ? undefined : String(input.temperature),
-        humidity: input.humidity === undefined ? undefined : String(input.humidity),
-        co2: input.co2 === undefined ? undefined : String(input.co2),
+        nilai: String(input.nilai),
+        namaNilai: currentDevice.namaNilai,
+        satuanNilai: currentDevice.satuanNilai,
         source: input.source,
         receivedAt,
       })
@@ -46,7 +37,7 @@ async function ingestTelemetry(input: {
 
     await tx
       .update(device)
-      .set({ status: "online", lastSeen: receivedAt })
+      .set({ lastSeen: receivedAt })
       .where(eq(device.id, input.deviceId));
 
     await tx
@@ -64,16 +55,9 @@ async function ingestTelemetry(input: {
       .where(eq(deviceThreshold.deviceId, input.deviceId));
 
     for (const threshold of thresholds) {
-      const value = input[threshold.metric];
-      if (value === undefined)
-        continue;
-
-      const violating = (
-        threshold.minimum !== null && value < Number(threshold.minimum)
-      ) || (
-        threshold.maximum !== null && value > Number(threshold.maximum)
-      );
-      const type = metricAlert[threshold.metric];
+      const value = input.nilai;
+      const violating = value > Number(threshold.maximum);
+      const type = "VALUE_HIGH";
 
       if (violating) {
         const [existing] = await tx
@@ -97,7 +81,7 @@ async function ingestTelemetry(input: {
             .values({
               deviceId: input.deviceId,
               type,
-              severity: severityFor(threshold.metric),
+              severity: "medium",
               lastValue: String(value),
             })
             .onConflictDoNothing();
@@ -116,22 +100,59 @@ async function ingestTelemetry(input: {
     }
 
     return reading;
-  });
+  };
+  return transaction ? ingest(transaction) : db.transaction(ingest);
 }
 
 export const IoTService = {
+  async createDevice(input: z.infer<typeof createDeviceSchema>) {
+    return db.transaction(async (tx) => {
+      const [created] = await tx.insert(device).values({
+        name: input.name,
+        location: input.location || null,
+        namaNilai: input.namaNilai,
+        satuanNilai: input.satuanNilai,
+      }).returning();
+      await tx.insert(deviceThreshold).values({ deviceId: created!.id, maximum: String(input.threshold) });
+      if (input.nilai !== undefined)
+        await ingestTelemetry({ deviceId: created!.id, nilai: input.nilai, source: "device" }, tx);
+      return created!;
+    });
+  },
+
+  async syncOfflineAlerts() {
+    await db.transaction(async (tx) => {
+      const now = Date.now();
+      const devices = await tx.select().from(device).where(and(
+        sql`coalesce(${device.lastSeen}, ${device.createdAt}) < ${new Date(now - OFFLINE_MS).toISOString()}::timestamptz`,
+        sql`not exists (select 1 from ${alert} where ${alert.deviceId} = ${device.id} and ${alert.type} = 'DEVICE_OFFLINE' and ${alert.status} <> 'resolved')`,
+      )).orderBy(device.id).for("update");
+      for (const item of devices) {
+        const since = item.lastSeen ?? item.createdAt;
+        if (now - since.getTime() <= OFFLINE_MS)
+          continue;
+        await tx.insert(alert).values({
+          deviceId: item.id,
+          type: "DEVICE_OFFLINE",
+          severity: "high",
+          openedAt: new Date(since.getTime() + OFFLINE_MS),
+        }).onConflictDoNothing();
+      }
+    });
+  },
+
   async listDevices() {
-    return db
-      .select()
+    const items = await db
+      .select({ device, maximum: deviceThreshold.maximum })
       .from(device)
+      .leftJoin(deviceThreshold, eq(deviceThreshold.deviceId, device.id))
       .orderBy(device.name);
+    return items.map(item => ({ ...item.device, threshold: item.maximum, ...dataState(item.device.lastSeen) }));
   },
 
   async getOverview() {
-    const devices = await db
-      .select()
-      .from(device)
-      .orderBy(device.name);
+    await this.syncOfflineAlerts();
+    const devices = await this.listDevices();
 
     const activeAlertCount = await db
       .select({ value: count() })
@@ -145,7 +166,7 @@ export const IoTService = {
         .where(eq(telemetry.deviceId, item.id))
         .orderBy(desc(telemetry.receivedAt), desc(telemetry.id))
         .limit(1);
-      return { ...item, latestTelemetry: latest ?? null, stale: item.status === "offline" };
+      return { ...item, latestTelemetry: latest ?? null };
     }));
 
     return { devices: latestTelemetry, activeAlertCount: activeAlertCount[0]?.value ?? 0 };
@@ -189,6 +210,7 @@ export const IoTService = {
     type?: string;
     deviceId?: number;
   }) {
+    await this.syncOfflineAlerts();
     const filters = [
       query.status ? eq(alert.status, query.status) : undefined,
       query.type ? eq(alert.type, query.type) : undefined,
@@ -198,8 +220,10 @@ export const IoTService = {
 
     const [items, [total]] = await Promise.all([
       db
-        .select()
+        .select({ alert, namaNilai: device.namaNilai, satuanNilai: device.satuanNilai, threshold: deviceThreshold.maximum })
         .from(alert)
+        .innerJoin(device, eq(device.id, alert.deviceId))
+        .leftJoin(deviceThreshold, eq(deviceThreshold.deviceId, device.id))
         .where(where)
         .orderBy(desc(alert.openedAt), desc(alert.id))
         .limit(query.limit)
@@ -210,7 +234,7 @@ export const IoTService = {
         .where(where),
     ]);
 
-    return { items, total: total?.value ?? 0, page: query.page, limit: query.limit };
+    return { items: items.map(({ alert: item, ...metadata }) => ({ ...item, ...metadata })), total: total?.value ?? 0, page: query.page, limit: query.limit };
   },
 
   ingestTelemetry,
@@ -235,67 +259,23 @@ export const IoTService = {
   },
 
   async generateTelemetry(mode: "normal" | "random" | "anomaly") {
-    const devices = await db
-      .select()
-      .from(device)
-      .orderBy(device.id);
-
+    const devices = await this.listDevices();
+    const anomalyDevice = devices.find(item => item.threshold !== null && Number(item.threshold) < 99_999_999.99);
+    if (mode === "anomaly" && !anomalyDevice)
+      throw createError({ statusCode: 409, statusMessage: "Tidak ada perangkat dengan threshold yang dapat disimulasikan" });
     const results = [];
-    let anomalyAssigned = false;
-
     for (const item of devices) {
-      if (mode === "random" && item.status === "online" && Math.random() < 0.1) {
-        await db.transaction(async (tx) => {
-          await tx
-            .update(device)
-            .set({ status: "offline" })
-            .where(eq(device.id, item.id));
-          await tx
-            .insert(alert)
-            .values({
-              deviceId: item.id,
-              type: "DEVICE_OFFLINE",
-              severity: "high",
-            })
-            .onConflictDoNothing();
-        });
-        results.push({ deviceId: item.id, outcome: "offline" });
-        continue;
-      }
-
-      if (mode === "random" && item.status === "offline" && Math.random() >= 0.5) {
-        results.push({ deviceId: item.id, outcome: "offline" });
-        continue;
-      }
-
-      const [threshold] = await db
-        .select()
-        .from(deviceThreshold)
-        .where(and(
-          eq(deviceThreshold.deviceId, item.id),
-          eq(deviceThreshold.metric, "temperature"),
-        ))
-        .limit(1);
-
-      const temperature = mode === "anomaly" && !anomalyAssigned && threshold?.maximum
-        ? Number(threshold.maximum) + 5
-        : 20 + Math.random() * 8;
-      if (mode === "anomaly" && !anomalyAssigned)
-        anomalyAssigned = true;
-
+      const maximum = Number(item.threshold ?? 60);
+      const span = Math.max(Math.abs(maximum) * 0.5, 10);
+      const value = mode === "anomaly" && item.id === anomalyDevice?.id
+        ? maximum + Math.max(0.01, Math.random() * span)
+        : maximum - Math.random() * span + (mode === "random" ? span / 2 : 0);
       const reading = await ingestTelemetry({
         deviceId: item.id,
-        temperature: Number(temperature.toFixed(2)),
-        humidity: Number((40 + Math.random() * 30).toFixed(2)),
-        co2: Math.round(400 + Math.random() * 400),
+        nilai: Number(Math.max(-99_999_999.99, Math.min(99_999_999.99, value)).toFixed(2)),
         source: "simulator",
       });
-
       results.push({ deviceId: item.id, outcome: "telemetry", reading });
-    }
-
-    if (mode === "anomaly" && !anomalyAssigned) {
-      throw createError({ statusCode: 409, statusMessage: "No devices are available for anomaly simulation" });
     }
     return { mode, results };
   },

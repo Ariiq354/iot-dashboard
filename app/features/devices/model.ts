@@ -18,6 +18,10 @@ export const deviceColumns: TableColumn<
     cell: ({ row }) => row.original.location ?? "—",
   },
   { accessorKey: "status", header: "Koneksi" },
+  { accessorKey: "stale", header: "Kesegaran data" },
+  { accessorKey: "namaNilai", header: "Nama nilai" },
+  { accessorKey: "satuanNilai", header: "Satuan" },
+  { accessorKey: "threshold", header: "Threshold alert (>)" },
   {
     accessorKey: "lastSeen",
     header: "Terakhir menerima data (WIB)",

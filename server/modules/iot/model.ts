@@ -1,19 +1,13 @@
 import { z } from "zod";
+import { sensorNumber } from "../../../shared/schemas/iot";
 import { paginationSchema } from "../../utils/schema";
+
+export { createDeviceSchema } from "../../../shared/schemas/iot";
 
 export const telemetryInputSchema = z.object({
   deviceId: z.coerce.number().int().positive(),
-  temperature: z.number().finite().optional(),
-  humidity: z.number().finite().min(0).max(100).optional(),
-  co2: z.number().finite().min(0).optional(),
-  source: z.enum(["simulator", "device"]).default("device"),
-}).refine(
-  input =>
-    input.temperature !== undefined
-    || input.humidity !== undefined
-    || input.co2 !== undefined,
-  "At least one sensor value is required",
-);
+  nilai: sensorNumber,
+});
 
 export const telemetryHistoryQuerySchema = paginationSchema.extend({
   deviceId: z.coerce.number().int().positive().optional(),

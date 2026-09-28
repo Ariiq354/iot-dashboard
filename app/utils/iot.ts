@@ -12,9 +12,7 @@ export function formatSensor(value: string | number | null | undefined, unit: st
 
 export const alertLabels: Record<string, string> = {
   DEVICE_OFFLINE: "Perangkat offline",
-  TEMPERATURE_HIGH: "Suhu di luar batas",
-  HUMIDITY_HIGH: "Kelembapan di luar batas",
-  CO2_HIGH: "CO₂ di luar batas",
+  VALUE_HIGH: "Nilai melebihi threshold",
 };
 
 export function errorMessage(error: unknown) {

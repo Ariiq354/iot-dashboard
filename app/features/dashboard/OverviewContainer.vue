@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useDocumentVisibility, useIntervalFn } from "@vueuse/core";
-import { LineChart } from "vue-chrts";
+import { dataState } from "~~/shared/iot";
+import { LineChart } from "#components";
 import DataTable from "~/components/table/DataTable.vue";
 import { formatDate } from "~/utils/iot";
-import { chartFilterSchema, metrics, overviewColumns } from "./model";
+import { chartFilterSchema, overviewColumns } from "./model";
 
 const { data, status, error, refresh } = await useFetch(
   "/api/dashboard/overview",
@@ -44,16 +45,19 @@ const chartData = computed(() =>
     .filter(
       item =>
         item.deviceId === Number(filters.deviceId)
-        && item[filters.metric] !== null,
+        && item.nilai !== null,
     )
     .toReversed()
     .map(item => ({
       time: item.receivedAt,
-      value: Number(item[filters.metric]),
+      value: Number(item.nilai),
     })),
 );
 
-const metric = computed(() => metrics[filters.metric]);
+const metric = computed(() => {
+  const selected = data.value?.devices.find(d => d.id === Number(filters.deviceId));
+  return { label: selected?.namaNilai ?? "Nilai", unit: selected?.satuanNilai ?? "", color: "#f97316" };
+});
 const categories = computed(() => ({
   value: { name: metric.value.label, color: metric.value.color },
 }));
@@ -81,7 +85,7 @@ onActivated(resume);
 
 function isStale(lastSeen: string | null, offline: boolean) {
   return (
-    offline || !lastSeen || now.value - new Date(lastSeen).getTime() > 60000
+    offline || dataState(lastSeen, now.value).stale
   );
 }
 
@@ -182,17 +186,6 @@ function xFormatter(index: number) {
               placeholder="Pilih perangkat"
               class="w-56"
             />
-            <USelect
-              v-model="filters.metric"
-              aria-label="Metrik grafik"
-              :items="
-                Object.entries(metrics).map(([value, item]) => ({
-                  value,
-                  label: item.label,
-                }))
-              "
-              class="w-40"
-            />
           </div>
         </div>
       </template>
@@ -270,7 +263,7 @@ function xFormatter(index: number) {
         </template>
         <template #empty>
           <p class="py-8 text-muted">
-            Belum ada perangkat. Tambahkan data perangkat melalui seed.
+            Belum ada perangkat. Admin dapat menambahkannya di halaman Perangkat.
           </p>
         </template>
       </DataTable>

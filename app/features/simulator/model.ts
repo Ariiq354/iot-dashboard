@@ -15,13 +15,13 @@ export const simulationModes = [
     label: "Random",
     value: "random",
     description:
-      "Status koneksi berubah secara acak dan perangkat online mengirim reading.",
+      "Semua perangkat mengirim nilai acak yang dapat melewati threshold alert.",
   },
   {
     label: "Force Anomaly",
     value: "anomaly",
     description:
-      "Suhu perangkat pertama dibuat melewati batas maksimum yang dikonfigurasi.",
+      "Nilai salah satu perangkat dibuat melewati threshold alert.",
   },
 ];
 export const resultColumns: TableColumn<
@@ -29,7 +29,6 @@ export const resultColumns: TableColumn<
 >[] = [
   { accessorKey: "deviceId", header: "Perangkat" },
   { accessorKey: "outcome", header: "Hasil" },
-  { id: "temperature", header: "Suhu" },
-  { id: "humidity", header: "Kelembapan" },
-  { id: "co2", header: "CO₂" },
+  { id: "namaNilai", header: "Nama nilai", cell: ({ row }) => row.original.reading?.namaNilai },
+  { id: "nilai", header: "Nilai" },
 ];

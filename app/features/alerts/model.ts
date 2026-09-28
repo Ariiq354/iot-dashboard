@@ -1,7 +1,7 @@
 import type { TableColumn } from "@nuxt/ui";
 import type { IoTService } from "~~/server/modules/iot/service";
 import { z } from "zod";
-import { alertLabels, formatDate } from "~/utils/iot";
+import { alertLabels, formatDate, formatSensor } from "~/utils/iot";
 
 export const alertFilterSchema = z.object({
   status: z.enum(["all", "active", "acknowledged", "resolved"]).default("all"),
@@ -30,11 +30,17 @@ export const alertColumns: TableColumn<
     cell: ({ row }) => alertLabels[row.original.type] ?? row.original.type,
   },
   { accessorKey: "severity", header: "Prioritas" },
+  { accessorKey: "namaNilai", header: "Nama nilai" },
+  {
+    accessorKey: "threshold",
+    header: "Threshold (>)",
+    cell: ({ row }) => row.original.type === "VALUE_HIGH" ? formatSensor(row.original.threshold, row.original.satuanNilai) : "—",
+  },
   { accessorKey: "status", header: "Status" },
   {
     accessorKey: "lastValue",
     header: "Nilai terakhir",
-    cell: ({ row }) => row.original.lastValue ?? "—",
+    cell: ({ row }) => formatSensor(row.original.lastValue, row.original.satuanNilai),
   },
   {
     accessorKey: "openedAt",

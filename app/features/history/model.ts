@@ -24,19 +24,13 @@ export const historyColumns: TableColumn<
   },
   { accessorKey: "deviceId", header: "Perangkat" },
   {
-    accessorKey: "temperature",
-    header: "Suhu",
-    cell: ({ row }) => formatSensor(row.original.temperature, "°C"),
+    accessorKey: "namaNilai",
+    header: "Nama nilai",
   },
   {
-    accessorKey: "humidity",
-    header: "Kelembapan",
-    cell: ({ row }) => formatSensor(row.original.humidity, "%"),
-  },
-  {
-    accessorKey: "co2",
-    header: "CO₂",
-    cell: ({ row }) => formatSensor(row.original.co2, "ppm"),
+    accessorKey: "nilai",
+    header: "Nilai",
+    cell: ({ row }) => formatSensor(row.original.nilai, row.original.satuanNilai),
   },
   { accessorKey: "source", header: "Sumber" },
 ];

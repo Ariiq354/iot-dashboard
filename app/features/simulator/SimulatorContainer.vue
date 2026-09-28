@@ -86,9 +86,9 @@ async function submit() {
             />
           </UFormField>
           <p class="text-sm text-muted">
-            Satu klik memproses seluruh perangkat. Mode anomaly memerlukan batas
-            maksimum suhu pada perangkat pertama. Nilai normal contoh: suhu
-            20–28 °C, kelembapan 40–70%, CO₂ 400–800 ppm.
+            Satu klik mengirim satu nilai untuk setiap perangkat. Nama nilai dan
+            satuan mengikuti konfigurasi perangkat. Mode normal tidak melebihi
+            threshold; mode anomaly memicu minimal satu alert.
           </p>
           <UButton
             type="submit"
@@ -123,10 +123,7 @@ async function submit() {
           <span>{{
             result.results.filter((r) => r.outcome === "telemetry").length
           }}
-            reading tersimpan</span><span>{{
-            result.results.filter((r) => r.outcome === "offline").length
-          }}
-            perangkat offline</span>
+            reading tersimpan</span>
         </div>
 
         <DataTable :data="result.results" :columns="resultColumns">
@@ -150,14 +147,8 @@ async function submit() {
               }}
             </UBadge>
           </template>
-          <template #temperature-cell="{ row }">
-            {{ formatSensor(row.original.reading?.temperature, "°C") }}
-          </template>
-          <template #humidity-cell="{ row }">
-            {{ formatSensor(row.original.reading?.humidity, "%") }}
-          </template>
-          <template #co2-cell="{ row }">
-            {{ formatSensor(row.original.reading?.co2, "ppm") }}
+          <template #nilai-cell="{ row }">
+            {{ formatSensor(row.original.reading?.nilai, row.original.reading?.satuanNilai ?? "") }}
           </template>
           <template #empty>
             <p class="py-8 text-muted">
@@ -185,7 +176,7 @@ async function submit() {
       icon="i-lucide-info"
       color="neutral"
       title="Tentang simulasi"
-      description="Data benar-benar disimpan ke database. Status offline disimulasikan secara manual, tanpa perangkat fisik atau pemeriksaan timeout otomatis."
+      description="Data disimpan ke database. Data menjadi stale setelah 1 menit dan perangkat offline setelah 3 menit tanpa pembacaan baru."
     />
   </div>
 </template>
