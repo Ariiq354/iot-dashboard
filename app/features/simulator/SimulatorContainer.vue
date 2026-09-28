@@ -158,25 +158,5 @@ async function submit() {
         </DataTable>
       </UCard>
     </template>
-
-    <div class="flex gap-3">
-      <UButton
-        to="/dashboard/alerts"
-        variant="soft"
-        icon="i-lucide-triangle-alert"
-      >
-        Lihat peringatan
-      </UButton>
-      <UButton to="/dashboard/history" color="neutral" variant="outline">
-        Riwayat Telemetri
-      </UButton>
-    </div>
-
-    <UAlert
-      icon="i-lucide-info"
-      color="neutral"
-      title="Tentang simulasi"
-      description="Data disimpan ke database. Data menjadi stale setelah 1 menit dan perangkat offline setelah 3 menit tanpa pembacaan baru."
-    />
   </div>
 </template>

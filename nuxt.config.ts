@@ -30,10 +30,4 @@ export default defineNuxtConfig({
     dirs: [],
   },
 
-  vite: {
-    ssr: {
-      noExternal: ["vue-chrts", "@unovis/ts", "@unovis/vue"],
-    },
-  },
-
 });

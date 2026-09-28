@@ -28,6 +28,19 @@ lama sebelum menjalankan versi baru. Migrasi menghapus data perangkat, telemetri
 threshold, dan alert lama; tabel autentikasi tetap tersedia. Database baru dapat
 dibuat dari skema terbaru menggunakan `bun run db:push`.
 
+### Seed data demo
+
+```bash
+bun run db:seed
+```
+
+Mengisi 5 perangkat demo dengan metrik berbeda, 5 threshold, 150 telemetri,
+dan 4 alert (aktif, acknowledged, resolved, serta offline). Seluruh insert
+dijalankan dalam satu transaksi. Perangkat demo yang sudah ada dilewati saat
+seed dijalankan ulang. Timestamp relatif terhadap waktu seed pertama sehingga
+kondisi segar/stale/offline akan berubah seiring waktu; simulator dapat dipakai
+untuk menghasilkan pembacaan baru.
+
 ### Pemeriksaan
 
 ```bash
